@@ -34,7 +34,7 @@ jobs:
       - name: Discover Dockerfiles
         id: discover
         run: |
-          files=$(find Dockerfiles -mindepth 2 -maxdepth 2 -name Dockerfile)
+          files=$(find Dockerfiles -type f -name Dockerfile)
           matrix=$(echo "$files" | jq -R -s -c 'split("\n")[:-1] | {dockerfile: .}')
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
