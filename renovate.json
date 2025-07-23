@@ -10,9 +10,7 @@
     "argocd",
     "github-actions"
   ],
-  "automerge": true,
-  "automergeStrategy": "squash",
-  "platformAutomerge": true,
+  "automerge": false,
   "respectLatest": true,
   "ignoreTests": true,
   "minimumReleaseAge": null,
@@ -22,7 +20,7 @@
       "matchDepNames": [
         "immich"
       ],
-      "automerge": true
+      "automerge": false
     },
     {
       "matchUpdateTypes": [
@@ -35,7 +33,7 @@
         "minor",
         "patch"
       ],
-      "automerge": true
+      "automerge": false
     }
   ],
   "argocd": {
