@@ -15,9 +15,9 @@ jobs:
 
       - id: find
         run: |
-          files=$(find Dockerfiles -mindepth 2 -maxdepth 2 -name Dockerfile)
+          files=$(find Dockerfiles -type f -name Dockerfile)
           echo "Raw files found by find:"
-          find Dockerfiles -mindepth 2 -maxdepth 2 -name Dockerfile
+          find Dockerfiles -type f -name Dockerfile
           if [ -z "$files" ]; then
             echo "dockerfiles=[]" >> $GITHUB_OUTPUT
           else
