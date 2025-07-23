@@ -63,13 +63,13 @@ jobs:
         id: meta
         run: |
           context_path=$(dirname "${{ matrix.dockerfile }}")
-          image_name=$(echo "$context_path" | sed 's|^Dockerfiles/||' | tr '/.' '-' | tr '[:upper:]' '[:lower:]')
-          if [[ -z "$image_name" ]]; then image_name="docker"; fi
-          # If Dockerfile is at top level, use project root as context
           if [[ "$context_path" == "Dockerfiles" ]]; then
             build_context="."
+            image_name="resume"
           else
             build_context="$context_path"
+            image_name=$(echo "$context_path" | sed 's|^Dockerfiles/||' | tr '/.' '-' | tr '[:upper:]' '[:lower:]')
+            if [[ -z "$image_name" ]]; then image_name="resume"; fi
           fi
           echo "context_path=$build_context" >> $GITHUB_OUTPUT
           echo "image_name=$image_name" >> $GITHUB_OUTPUT

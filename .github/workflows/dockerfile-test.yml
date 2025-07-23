@@ -58,7 +58,13 @@ jobs:
 
       - id: imgname
         run: |
-          name=$(dirname "${{ matrix.dockerfile }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+          context=$(dirname "${{ matrix.dockerfile }}")
+          if [ "$context" = "Dockerfiles" ]; then
+            name="resume"
+          else
+            name=$(echo "$context" | sed 's|^Dockerfiles/||' | tr '/.' '-' | tr '[:upper:]' '[:lower:]')
+            if [ -z "$name" ]; then name="resume"; fi
+          fi
           echo "name=$name" >> $GITHUB_OUTPUT
 
       - id: context
