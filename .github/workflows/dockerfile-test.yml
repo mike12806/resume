@@ -64,6 +64,9 @@ jobs:
       - id: context
         run: |
           context=$(dirname "${{ matrix.dockerfile }}")
+          if [ "$context" = "Dockerfiles" ]; then
+            context="."
+          fi
           echo "context=$context" >> $GITHUB_OUTPUT
 
       - uses: docker/build-push-action@v6
