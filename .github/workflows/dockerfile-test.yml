@@ -1,0 +1,103 @@
+name: docker-build-verification
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  discover-dockerfiles:
+    runs-on: ubuntu-latest
+    outputs:
+      dockerfiles: ${{ steps.find.outputs.dockerfiles }}
+      found: ${{ steps.found.outputs.found }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: find
+        run: |
+          files=$(find Dockerfiles -mindepth 2 -maxdepth 2 -name Dockerfile)
+          echo "Raw files found by find:"
+          find Dockerfiles -mindepth 2 -maxdepth 2 -name Dockerfile
+          if [ -z "$files" ]; then
+            echo "dockerfiles=[]" >> $GITHUB_OUTPUT
+          else
+            jq -n --arg files "$files" '$files | split("\n")' > dockerfiles.json
+            echo "dockerfiles=$(jq -c . dockerfiles.json)" >> $GITHUB_OUTPUT
+            echo "Output as JSON:"
+            cat dockerfiles.json
+          fi
+
+      - id: found
+        run: |
+          if [ -f dockerfiles.json ]; then
+            found=$(jq length dockerfiles.json)
+          else
+            found=0
+          fi
+          if [ "$found" -gt 0 ]; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+          echo "found output: $found"
+
+
+  build-and-test:
+    needs: discover-dockerfiles
+    if: needs.discover-dockerfiles.outputs.found == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dockerfile: ${{ fromJson(needs.discover-dockerfiles.outputs.dockerfiles) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: imgname
+        run: |
+          name=$(dirname "${{ matrix.dockerfile }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+          echo "name=$name" >> $GITHUB_OUTPUT
+
+      - id: context
+        run: |
+          context=$(dirname "${{ matrix.dockerfile }}")
+          echo "context=$context" >> $GITHUB_OUTPUT
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: "${{ github.workspace }}/${{ steps.context.outputs.context }}"
+          file: "${{ github.workspace }}/${{ matrix.dockerfile }}"
+          push: false
+          load: true
+          tags: "test-${{ steps.imgname.outputs.name }}:${{ github.sha }}"
+
+      - name: Smoke test
+        run: |
+          image_tag="test-${{ steps.imgname.outputs.name }}:${{ github.sha }}"
+          if [[ "${{ matrix.dockerfile }}" == *"Runner"* ]]; then
+            docker run --rm "$image_tag" python3 --version
+            exit $?
+          fi
+          docker run --rm --entrypoint /bin/sh "$image_tag" -c "ls /"
+          result=$?
+          if [ $result -eq 0 ]; then
+            exit 0
+          fi
+          if [ $result -eq 127 ]; then
+            echo "No shell, try default entrypoint"
+            timeout 10 docker run --rm "$image_tag"
+            rc=$?
+            if [ $rc -eq 124 ]; then
+              echo "Timeout"
+              exit 1
+            elif [ $rc -ne 0 ]; then
+              echo "Exited nonzero"
+              exit 1
+            fi
+            exit 0
+          fi
+          echo "Unknown failure"
+          exit 1
