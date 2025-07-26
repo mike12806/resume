@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'Dockerfiles/**'
+      - '**'
 
 env:
   REGISTRY: ghcr.io
