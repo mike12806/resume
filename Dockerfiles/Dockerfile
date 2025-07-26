@@ -1,4 +1,4 @@
-FROM nginx:1.28-alpine
+FROM nginx:1.29-alpine
 COPY resume/ /usr/share/nginx/html/
 COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 8080
