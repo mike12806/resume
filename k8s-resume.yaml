@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: resume
-        image: ghcr.io/mike12806/resume:latest
+        image: ghcr-reg.mfaherty.net/mike12806/resume:0.3.0
         ports:
         - containerPort: 8080
 ---
