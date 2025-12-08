@@ -2,14 +2,6 @@
   "extends": [
     "config:recommended"
   ],
-  "enabledManagers": [
-    "docker-compose",
-    "dockerfile",
-    "helm-values",
-    "kubernetes",
-    "argocd",
-    "github-actions"
-  ],
   "automerge": false,
   "respectLatest": true,
   "ignoreTests": true,
