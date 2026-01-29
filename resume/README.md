@@ -11,4 +11,4 @@ docker run --rm -p 8080:8080 resume
 ```
 
 Then navigate to `http://localhost:8080/` in your browser. The page uses the
-Bootswatch **lux** theme from a CDN, so Internet access is required.
+Bootswatch **lux** theme which is bundled locally in the Docker image.
