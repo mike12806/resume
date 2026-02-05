@@ -35,14 +35,14 @@
   },
   "kubernetes": {
     "managerFilePatterns": [
-      "/deployment.yaml/",
-      "/deployment.yml/"
+      "/deployment\\.yaml$/",
+      "/deployment\\.yml$/"
     ]
   },
   "docker-compose": {
     "managerFilePatterns": [
-      "/docker-compose.yaml/",
-      "/docker-compose.yml/"
+      "/docker-compose\\.yaml$/",
+      "/docker-compose\\.yml$/"
     ]
   },
   "github-actions": {
