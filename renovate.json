@@ -29,31 +29,31 @@
     }
   ],
   "argocd": {
-    "fileMatch": [
+    "managerFilePatterns": [
       "kubernetes/apps/.*\\.ya?ml$"
     ]
   },
   "kubernetes": {
-    "fileMatch": [
+    "managerFilePatterns": [
       "deployment.yaml",
       "deployment.yml"
     ]
   },
   "docker-compose": {
-    "fileMatch": [
+    "managerFilePatterns": [
       "docker-compose.yaml",
       "docker-compose.yml"
     ]
   },
   "github-actions": {
-    "fileMatch": [
+    "managerFilePatterns": [
       "^\\.github\\/workflows\\/[^/]+\\.ya?ml$"
     ]
   },
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
+      "managerFilePatterns": [
         ".*\\.ya?ml$"
       ],
       "matchStrings": [
