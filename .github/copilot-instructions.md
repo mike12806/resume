@@ -74,6 +74,8 @@ This project uses **Renovate** for automated dependency updates:
 - **Verify builds** on every pull request
 - Use **matrix strategies** for testing multiple configurations
 - **Cache aggressively** (Docker layers, build artifacts) to speed up workflows
+  - Use cache invalidation when base images or dependencies are updated for security
+  - Consider cache freshness requirements vs. build speed trade-offs
 - **Minimize permissions** - use `permissions: contents: read` by default
 - Pin action versions to specific commits or tags for security
 
