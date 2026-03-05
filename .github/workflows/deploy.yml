@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+env:
+  PAGES_PROJECT: resume
+  PAGES_DOMAIN: resume.mfaherty.net
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,4 +21,11 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
-          command: pages deploy resume --project-name=resume
+          command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }}
+
+      - name: Register custom domain
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          command: pages domain add ${{ env.PAGES_DOMAIN }} --project-name=${{ env.PAGES_PROJECT }}
+        continue-on-error: true
