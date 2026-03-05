@@ -62,6 +62,18 @@
       "datasourceTemplate": "docker",
       "depNameTemplate": "immich",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "^\\.github\\/workflows\\/[^/]+\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "wranglerVersion:\\s*[\"'](?<currentValue>[^\"'\\s]+)[\"']"
+      ],
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "wrangler",
+      "versioningTemplate": "semver"
     }
   ]
 }
