@@ -57,3 +57,59 @@ jobs:
             echo "Domain registered successfully"
           fi
         continue-on-error: true
+
+      - name: Configure DNS CNAME for custom domain
+        run: |
+          # Read the actual pages.dev subdomain from the Pages project
+          PROJECT_RESPONSE=$(curl -s -X GET \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          PAGES_DOMAIN=$(echo "$PROJECT_RESPONSE" | jq -r '.result.subdomain // ""')
+          if [ -z "$PAGES_DOMAIN" ]; then
+            echo "Could not read pages.dev subdomain from API, falling back to default"
+            PAGES_DOMAIN="${{ env.PAGES_PROJECT }}.pages.dev"
+          fi
+          echo "Pages domain: $PAGES_DOMAIN"
+
+          # Look up the zone ID for mfaherty.net
+          ZONE_RESPONSE=$(curl -s -X GET \
+            "https://api.cloudflare.com/client/v4/zones?name=mfaherty.net" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          ZONE_ID=$(echo "$ZONE_RESPONSE" | jq -r '.result[0].id // ""')
+          if [ -z "$ZONE_ID" ]; then
+            echo "Failed to get zone ID for mfaherty.net"
+            exit 1
+          fi
+          echo "Zone ID: $ZONE_ID"
+
+          # Check whether a CNAME record already exists for resume.mfaherty.net
+          RECORDS_RESPONSE=$(curl -s -X GET \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=CNAME&name=resume.mfaherty.net" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          RECORD_ID=$(echo "$RECORDS_RESPONSE" | jq -r '.result[0].id // ""')
+
+          if [ -n "$RECORD_ID" ]; then
+            echo "Updating existing CNAME record $RECORD_ID..."
+            RESULT=$(curl -s -X PUT \
+              "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RECORD_ID" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"type\":\"CNAME\",\"name\":\"resume\",\"content\":\"$PAGES_DOMAIN\",\"proxied\":true}")
+          else
+            echo "Creating new CNAME record..."
+            RESULT=$(curl -s -X POST \
+              "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"type\":\"CNAME\",\"name\":\"resume\",\"content\":\"$PAGES_DOMAIN\",\"proxied\":true}")
+          fi
+
+          SUCCESS=$(echo "$RESULT" | jq -r '.success // "false"')
+          if [ "$SUCCESS" != "true" ]; then
+            echo "Error configuring DNS record: $(echo "$RESULT" | jq -r '.errors')"
+            exit 1
+          fi
+          echo "DNS CNAME configured: resume.mfaherty.net -> $PAGES_DOMAIN"
