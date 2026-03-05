@@ -17,6 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Create Cloudflare Pages project
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages project create ${{ env.PAGES_PROJECT }} --production-branch=main
+        continue-on-error: true
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
