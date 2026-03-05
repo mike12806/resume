@@ -22,6 +22,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          wranglerVersion: "3.90.0"
           command: pages project create ${{ env.PAGES_PROJECT }} --production-branch=main
         continue-on-error: true
 
@@ -30,6 +31,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          wranglerVersion: "3.90.0"
           command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }}
 
       - name: Register custom domain
@@ -37,5 +39,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          wranglerVersion: "3.90.0"
           command: pages domain add ${{ env.PAGES_DOMAIN }} --project-name=${{ env.PAGES_PROJECT }}
         continue-on-error: true
