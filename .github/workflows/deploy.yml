@@ -113,3 +113,19 @@ jobs:
             exit 1
           fi
           echo "DNS CNAME configured: resume.mfaherty.net -> $PAGES_DOMAIN"
+
+      - name: Verify custom domain
+        run: |
+          PATCH_RESPONSE=$(curl -s -X PATCH \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}/domains/resume.mfaherty.net" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "Verify response: $PATCH_RESPONSE"
+          SUCCESS=$(echo "$PATCH_RESPONSE" | jq -r '.success // "false"' 2>/dev/null)
+          if [ "$SUCCESS" != "true" ]; then
+            echo "Warning: domain verification trigger may not have succeeded: $(echo "$PATCH_RESPONSE" | jq -c '.errors // []')"
+          else
+            STATUS=$(echo "$PATCH_RESPONSE" | jq -r '.result.status // "unknown"' 2>/dev/null)
+            echo "Domain verification initiated, status: $STATUS"
+          fi
