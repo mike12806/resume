@@ -7,6 +7,7 @@ on:
 
 env:
   PAGES_PROJECT: resume
+  WRANGLER_VERSION: "3.90.0"
 
 jobs:
   deploy:
@@ -22,7 +23,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          wranglerVersion: "3.90.0"
+          wranglerVersion: ${{ env.WRANGLER_VERSION }}
           command: pages project create ${{ env.PAGES_PROJECT }} --production-branch=main
         continue-on-error: true
 
@@ -31,5 +32,14 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          wranglerVersion: "3.90.0"
+          wranglerVersion: ${{ env.WRANGLER_VERSION }}
           command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }} --commit-dirty=true
+
+      - name: Register custom domain
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          wranglerVersion: ${{ env.WRANGLER_VERSION }}
+          command: pages domain add resume.mfaherty.net --project-name=${{ env.PAGES_PROJECT }}
+        continue-on-error: true
