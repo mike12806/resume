@@ -36,10 +36,24 @@ jobs:
           command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }} --commit-dirty=true
 
       - name: Register custom domain
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          wranglerVersion: ${{ env.WRANGLER_VERSION }}
-          command: pages domain add resume.mfaherty.net --project-name=${{ env.PAGES_PROJECT }}
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}/domains" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "resume.mfaherty.net"}')
+          echo "Response: $RESPONSE"
+          SUCCESS=$(echo "$RESPONSE" | jq -r '.success // "false"' 2>/dev/null)
+          if [ "$SUCCESS" != "true" ]; then
+            CODE=$(echo "$RESPONSE" | jq -r '.errors[0].code // ""' 2>/dev/null)
+            MESSAGE=$(echo "$RESPONSE" | jq -r '.errors[0].message // "Unknown error"' 2>/dev/null)
+            if [[ "$CODE" == "8000003" ]] || [[ "$MESSAGE" == *"already"* ]]; then
+              echo "Domain already registered"
+            else
+              echo "Error ($CODE): $MESSAGE"
+              exit 1
+            fi
+          else
+            echo "Domain registered successfully"
+          fi
         continue-on-error: true
