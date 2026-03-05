@@ -32,4 +32,4 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           wranglerVersion: "3.90.0"
-          command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }}
+          command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }} --commit-dirty=true
