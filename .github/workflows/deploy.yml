@@ -21,11 +21,13 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }}
 
       - name: Register custom domain
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: pages domain add ${{ env.PAGES_DOMAIN }} --project-name=${{ env.PAGES_PROJECT }}
         continue-on-error: true
