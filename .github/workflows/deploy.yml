@@ -129,3 +129,28 @@ jobs:
             STATUS=$(echo "$PATCH_RESPONSE" | jq -r '.result.status // "unknown"' 2>/dev/null)
             echo "Domain verification initiated, status: $STATUS"
           fi
+
+      - name: Purge Cloudflare cache for resume.mfaherty.net
+        run: |
+          ZONE_RESPONSE=$(curl -s -X GET \
+            "https://api.cloudflare.com/client/v4/zones?name=mfaherty.net" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          ZONE_ID=$(echo "$ZONE_RESPONSE" | jq -r '.result[0].id // ""')
+          if [ -z "$ZONE_ID" ]; then
+            echo "Failed to get zone ID for mfaherty.net"
+            exit 1
+          fi
+          echo "Zone ID: $ZONE_ID"
+          PURGE_RESPONSE=$(curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"hosts": ["resume.mfaherty.net"]}')
+          echo "Purge response: $PURGE_RESPONSE"
+          SUCCESS=$(echo "$PURGE_RESPONSE" | jq -r '.success // "false"' 2>/dev/null)
+          if [ "$SUCCESS" != "true" ]; then
+            echo "Failed to purge Cloudflare cache for resume.mfaherty.net: $(echo "$PURGE_RESPONSE" | jq -c '.errors // []')"
+            exit 1
+          fi
+          echo "Cache purged successfully for resume.mfaherty.net"
