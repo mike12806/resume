@@ -1,154 +1,72 @@
 # GitHub Copilot Instructions
 
 ## Project Overview
-This repository follows **GitOps principles** for managing a Kubernetes-based homelab environment. All infrastructure and application configurations are version-controlled, and changes are deployed through Git workflows.
+This repository is a **personal resume website** for Michael E. Faherty. It is a static HTML/CSS site built with Bootstrap and deployed to **Cloudflare Pages** at `resume.mfaherty.net`. All changes are version-controlled in Git and deployed automatically via GitHub Actions.
 
-## GitOps Principles
+## Repository Structure
 
-### Core Tenets
-- **Declarative Configuration**: All system state is described declaratively in Git
-- **Version Control**: Git is the single source of truth for infrastructure and applications
-- **Automated Deployment**: Changes are automatically synced to the cluster
-- **Continuous Reconciliation**: The desired state in Git is continuously reconciled with the actual state
+```
+.github/
+  workflows/
+    deploy.yml              # Deploy to Cloudflare Pages on push to main
+    renovate-validate.yml   # Validate Renovate config on pull requests
+  copilot-instructions.md   # This file
+resume/
+  index.html                # Resume content
+  style.css                 # Custom styles
+  bootstrap.min.css         # Bootswatch "lux" theme (Bootstrap)
+renovate.json               # Renovate dependency update configuration
+```
 
-### Best Practices
-1. **Keep configurations declarative** - Use YAML manifests for all Kubernetes resources
-2. **Commit everything** - All changes go through Git, no manual `kubectl apply`
-3. **Use meaningful commit messages** - Describe what changed and why
-4. **Review before merge** - Use pull requests for all changes
-5. **Test in branches** - Validate changes in feature branches before merging
+## Technology Stack
 
-## Kubernetes Homelab Standards
+- **Frontend**: Static HTML5 and CSS3 with Bootstrap (Bootswatch "lux" theme)
+- **Hosting**: Cloudflare Pages, served at `resume.mfaherty.net`
+- **Deployment**: GitHub Actions using `cloudflare/wrangler-action`
+- **Dependency updates**: Renovate (tracking Wrangler and GitHub Actions versions)
 
-### Container Images
-- **Use specific image tags**, avoid `latest` tag
-- **Pin versions** for reproducibility and stability
-- **Use semantic versioning** when possible (e.g., `nginx:1.29-alpine`)
-- **Prefer official images** from trusted registries
-- **Use minimal base images** (e.g., Alpine, distroless) for security and size
+## HTML & CSS Guidelines
 
-### Manifest Organization
-- Keep Kubernetes manifests organized by application/service
-- Use meaningful file names (e.g., `deployment.yaml`, `service.yaml`)
-- Group related resources in the same directory
-- Document resource requirements and dependencies
+- Use **semantic HTML5 elements** (`<header>`, `<section>`, `<footer>`, etc.)
+- Use **Bootstrap utility classes** wherever possible before writing custom CSS
+- Keep custom styles in `style.css`; avoid inline styles
+- Use **2 spaces** for indentation in HTML and CSS files
+- Keep the resume content clean, readable, and accessible
 
-### Resource Management
-- **Always define resource requests and limits** for CPU and memory
-- Use appropriate resource units (e.g., `100m` for CPU, `256Mi` for memory)
-- Set sensible defaults that won't overcommit the cluster
-- Monitor and adjust based on actual usage
+## Deployment
 
-### Security Practices
-- **Run containers as non-root** whenever possible
-- Use `readOnlyRootFilesystem: true` where applicable
-- Apply `securityContext` settings appropriately
-- Keep secrets out of manifests - use Kubernetes Secrets or external secret management
-- Regularly update base images to patch vulnerabilities
+### How It Works
+Pushing to the `main` branch triggers the `deploy.yml` workflow, which:
+1. Deploys the `resume/` directory to Cloudflare Pages using Wrangler
+2. Registers and verifies the custom domain `resume.mfaherty.net`
+3. Configures a DNS CNAME record in the `mfaherty.net` Cloudflare zone
+4. Purges the Cloudflare cache so visitors see the latest version
+
+### Required Secrets
+- `CF_API_TOKEN` — Cloudflare API token with Pages and DNS permissions
+- `CF_ACCOUNT_ID` — Cloudflare account ID
+
+### Wrangler Version
+The Wrangler CLI version is pinned in `deploy.yml` via the `WRANGLER_VERSION` env variable and tracked by Renovate.
 
 ## Renovate Configuration
 
 This project uses **Renovate** for automated dependency updates:
 
-### Strategy
-- Dependencies are automatically detected and updated via pull requests
-- **Automerge is disabled** to ensure manual review of all updates
-- Updates respect `respectLatest: true` for proper version ordering
-- Major updates require manual approval for safety
+- **Automerge is disabled** — all updates require manual review before merging
+- **GitHub Actions** workflow dependencies are tracked and updated automatically
+- **Wrangler** npm package version (used in the deploy workflow) is tracked via a custom regex manager
 
-### Supported Ecosystems
-- **Docker images** in Dockerfiles and Kubernetes manifests
-- **GitHub Actions** workflow dependencies
-- **Kubernetes manifests** for application versions
-- **ArgoCD/Flux** application definitions
-- **docker-compose** files
-
-### Custom Patterns
-- Custom regex managers can detect non-standard version patterns
-- Image tags in YAML files are tracked via regex matching
-- File patterns target specific directories (e.g., `kubernetes/apps/`)
-
-## CI/CD Workflows
-
-### GitHub Actions Standards
-- **Verify builds** on every pull request
-- Use **matrix strategies** for testing multiple configurations
-- **Cache aggressively** (Docker layers, build artifacts) to speed up workflows
-  - Use cache invalidation when base images or dependencies are updated for security
-  - Consider cache freshness requirements vs. build speed trade-offs
-- **Minimize permissions** - use `permissions: contents: read` by default
-- Pin action versions to specific commits or tags for security
-
-### Docker Build Practices
-- Use **multi-stage builds** to minimize final image size
-- Leverage **BuildKit** for better caching and performance
-- **Scan images** for vulnerabilities before deployment
-- Tag images with commit SHAs for traceability
-- Use `docker/build-push-action` for optimized CI builds
-
-## Infrastructure as Code
-
-### General Principles
-- **Everything as code** - no manual infrastructure changes
-- **Idempotent operations** - running the same code multiple times produces the same result
-- **Documentation in code** - use comments and README files
-- **Secrets management** - never commit secrets; use secure vaults or encrypted stores
-- **Modular design** - break configurations into reusable components
-
-### File Organization
-```
-.github/
-  workflows/          # CI/CD pipelines
-kubernetes/
-  apps/               # Application manifests
-  infrastructure/     # Cluster infrastructure
-Dockerfiles/          # Container definitions
-```
-
-## Code Style and Quality
-
-### YAML Files
-- Use **2 spaces** for indentation
-- Keep lines under 100 characters when possible
-- Use consistent key ordering (kind, metadata, spec, etc.)
-- Add comments for complex or non-obvious configurations
-
-### Dockerfiles
-- Order instructions from least to most frequently changing
-- Combine `RUN` commands to reduce layers
-- Clean up package manager caches
-- Use `.dockerignore` to exclude unnecessary files
-
-### Documentation
-- Keep README files up-to-date with current setup
-- Document prerequisites and dependencies
-- Include examples for common operations
-- Explain non-obvious architectural decisions
-
-## Deployment Workflow
+## CI/CD Workflow
 
 1. **Make changes** in a feature branch
-2. **Open pull request** with clear description
-3. **Automated checks** run (Docker builds, linting, tests)
-4. **Review** changes for correctness and security
-5. **Merge** to main branch after approval
-6. **Automatic deployment** via GitOps controller (ArgoCD/Flux)
-7. **Monitor** for successful reconciliation
+2. **Open a pull request** — Renovate config is validated automatically
+3. **Review** changes for correctness
+4. **Merge** to `main` — triggers automatic deployment to Cloudflare Pages
 
-## Homelab-Specific Considerations
+## Best Practices
 
-- **Resource constraints** - Be mindful of limited CPU/memory in homelab environments
-- **Persistent storage** - Plan for stateful applications and backup strategies
-- **High availability** - Balance HA requirements with resource availability
-- **Networking** - Consider ingress, load balancing, and service exposure carefully
-- **Monitoring** - Implement observability early (metrics, logs, traces)
-- **Backup and recovery** - Regular backups of critical data and configurations
-
-## When Writing Code
-
-- **Follow GitOps** - Make changes through Git, not direct cluster manipulation
-- **Test locally** - Build and test Docker images before pushing
-- **Update dependencies** - Review and merge Renovate PRs regularly
-- **Security first** - Scan for vulnerabilities and follow security best practices
-- **Document changes** - Update relevant README files and comments
-- **Keep it simple** - Prefer simplicity over complexity in homelab setups
+- **Keep secrets out of code** — use GitHub Actions secrets for API tokens
+- **Pin dependency versions** — use specific version tags for actions and Wrangler
+- **Use meaningful commit messages** — describe what changed and why
+- **Test changes locally** before opening a pull request by previewing the HTML in a browser
