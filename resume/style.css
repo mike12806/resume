@@ -1,3 +1,14 @@
+:root {
+    --primary: #2e59d9;
+    --primary-light: #4e73df;
+    --accent: #1cc88a;
+    --heading-color: #2e59d9;
+    --card-border: #4e73df;
+    --company-color: #2e59d9;
+    --footer-bg: #f4f6fb;
+    --footer-color: #6c757d;
+}
+
 body {
     font-family: 'Open Sans', sans-serif;
     line-height: 1.6;
@@ -7,22 +18,34 @@ body {
     max-width: 900px;
 }
 
-
 header {
-    background: linear-gradient(45deg, #4e73df, #1cc88a);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 60%, var(--accent) 100%);
 }
 
 header h1.display-4.mb-1 {
-    color: #fff !important;
+    color: #fff;
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
+
+section h2 {
+    color: var(--heading-color);
+    border-bottom-color: var(--card-border) !important;
+}
+
+.card {
+    border: none;
+    border-left: 4px solid var(--card-border);
 }
 
 .company {
     font-weight: 600;
+    color: var(--company-color) !important;
 }
 
 footer {
     text-align: center;
     padding: 2rem 0;
+    background-color: var(--footer-bg);
+    color: var(--footer-color);
+    border-top: 1px solid #dde3f0;
 }
