@@ -1,12 +1,12 @@
 :root {
-    --primary: #2e59d9;
-    --primary-light: #4e73df;
-    --accent: #1cc88a;
-    --heading-color: #2e59d9;
-    --card-border: #4e73df;
-    --company-color: #2e59d9;
-    --footer-bg: #f4f6fb;
-    --footer-color: #6c757d;
+    --primary: #1a2e4a;
+    --primary-light: #2c4f82;
+    --accent: #4a7ab5;
+    --heading-color: #1a2e4a;
+    --card-border: #2c4f82;
+    --company-color: #1a2e4a;
+    --footer-bg: #f0f2f5;
+    --footer-color: #555;
 }
 
 body {
@@ -47,5 +47,5 @@ footer {
     padding: 2rem 0;
     background-color: var(--footer-bg);
     color: var(--footer-color);
-    border-top: 1px solid #dde3f0;
+    border-top: 1px solid #d0d7e2;
 }
