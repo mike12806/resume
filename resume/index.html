@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Michael E. Faherty - Resume</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
   <!-- Load the Bootswatch "lux" theme from local file -->
   <link rel="stylesheet" href="bootstrap.min.css">
   <link rel="stylesheet" href="style.css">
@@ -13,7 +15,7 @@
   <div class="container my-5">
     <header class="text-center py-5 text-white rounded shadow-sm mb-4">
       <h1 class="display-4 mb-1">Michael E. Faherty</h1>
-      <p class="lead mb-0">Insurance &amp; Innovation Professional</p>
+      <p class="lead mb-0">Insurance &amp; Innovation Technical Professional</p>
     </header>
 
     <section class="mb-5">
@@ -128,5 +130,21 @@
   <footer>
     <p>Based in the Boston area</p>
   </footer>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('section, .card').forEach(el => {
+        el.classList.add('fade-in-section');
+        observer.observe(el);
+      });
+    });
+  </script>
 </body>
 </html>
