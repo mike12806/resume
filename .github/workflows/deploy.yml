@@ -16,10 +16,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@1d96c772d19495a3b5c8dda2ff7a2fb3ba3dbf24 # v6.1.0
 
       - name: Create Cloudflare Pages project
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@f84a562ba83f2b6c48acf01f27e4a59f30434e66 # v3.8.1
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
@@ -28,7 +28,7 @@ jobs:
         continue-on-error: true
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@f84a562ba83f2b6c48acf01f27e4a59f30434e66 # v3.8.1
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
