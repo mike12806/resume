@@ -2,6 +2,7 @@
   "extends": [
     "config:recommended"
   ],
+  "internalChecksFilter": "strict",
   "automerge": false,
   "respectLatest": true,
   "ignoreTests": true,
