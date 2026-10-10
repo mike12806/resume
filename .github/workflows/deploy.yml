@@ -14,15 +14,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write  # Tailscale + Vault logins through GitHub OIDC
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Deploy secrets come from Vault (role resume-deploy, gh_hdc vault/),
+      # reached over the tailnet as tag:ci-vault with no stored secret. Runs
+      # before npm and leaves the tailnet before any build code runs.
+      - name: Read secrets from Vault
+        uses: mike12806/public-jobs/.github/actions/vault-secrets@98a8f4481b9225406dcad83a32c48765b357747f # main
+        with:
+          role: resume-deploy
+          hostname: github-resume-deploy
+          secrets: |
+            kv/data/github/resume/cloudflare CF_API_TOKEN | CF_API_TOKEN ;
+            kv/data/github/resume/cloudflare CF_ACCOUNT_ID | CF_ACCOUNT_ID
+
       - name: Create Cloudflare Pages project
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          apiToken: ${{ env.CF_API_TOKEN }}
+          accountId: ${{ env.CF_ACCOUNT_ID }}
           wranglerVersion: ${{ env.WRANGLER_VERSION }}
           command: pages project create ${{ env.PAGES_PROJECT }} --production-branch=main
         continue-on-error: true
@@ -30,16 +43,16 @@ jobs:
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          apiToken: ${{ env.CF_API_TOKEN }}
+          accountId: ${{ env.CF_ACCOUNT_ID }}
           wranglerVersion: ${{ env.WRANGLER_VERSION }}
           command: pages deploy resume --project-name=${{ env.PAGES_PROJECT }} --commit-dirty=true
 
       - name: Register custom domain
         run: |
           RESPONSE=$(curl -s -X POST \
-            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}/domains" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            "https://api.cloudflare.com/client/v4/accounts/${{ env.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}/domains" \
+            -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"name": "resume.mfaherty.net"}')
           echo "Response: $RESPONSE"
@@ -62,8 +75,8 @@ jobs:
         run: |
           # Read the actual pages.dev subdomain from the Pages project
           PROJECT_RESPONSE=$(curl -s -X GET \
-            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            "https://api.cloudflare.com/client/v4/accounts/${{ env.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}" \
+            -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
             -H "Content-Type: application/json")
           PAGES_DOMAIN=$(echo "$PROJECT_RESPONSE" | jq -r '.result.subdomain // ""')
           if [ -z "$PAGES_DOMAIN" ]; then
@@ -75,7 +88,7 @@ jobs:
           # Look up the zone ID for mfaherty.net
           ZONE_RESPONSE=$(curl -s -X GET \
             "https://api.cloudflare.com/client/v4/zones?name=mfaherty.net" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
             -H "Content-Type: application/json")
           ZONE_ID=$(echo "$ZONE_RESPONSE" | jq -r '.result[0].id // ""')
           if [ -z "$ZONE_ID" ]; then
@@ -87,7 +100,7 @@ jobs:
           # Check whether a CNAME record already exists for resume.mfaherty.net
           RECORDS_RESPONSE=$(curl -s -X GET \
             "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=CNAME&name=resume.mfaherty.net" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
             -H "Content-Type: application/json")
           RECORD_ID=$(echo "$RECORDS_RESPONSE" | jq -r '.result[0].id // ""')
 
@@ -95,14 +108,14 @@ jobs:
             echo "Updating existing CNAME record $RECORD_ID..."
             RESULT=$(curl -s -X PUT \
               "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RECORD_ID" \
-              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
               -H "Content-Type: application/json" \
               -d "{\"type\":\"CNAME\",\"name\":\"resume\",\"content\":\"$PAGES_DOMAIN\",\"proxied\":true}")
           else
             echo "Creating new CNAME record..."
             RESULT=$(curl -s -X POST \
               "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
-              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
               -H "Content-Type: application/json" \
               -d "{\"type\":\"CNAME\",\"name\":\"resume\",\"content\":\"$PAGES_DOMAIN\",\"proxied\":true}")
           fi
@@ -117,8 +130,8 @@ jobs:
       - name: Verify custom domain
         run: |
           PATCH_RESPONSE=$(curl -s -X PATCH \
-            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}/domains/resume.mfaherty.net" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            "https://api.cloudflare.com/client/v4/accounts/${{ env.CF_ACCOUNT_ID }}/pages/projects/${{ env.PAGES_PROJECT }}/domains/resume.mfaherty.net" \
+            -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{}')
           echo "Verify response: $PATCH_RESPONSE"
@@ -134,7 +147,7 @@ jobs:
         run: |
           ZONE_RESPONSE=$(curl -s -X GET \
             "https://api.cloudflare.com/client/v4/zones?name=mfaherty.net" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
             -H "Content-Type: application/json")
           ZONE_ID=$(echo "$ZONE_RESPONSE" | jq -r '.result[0].id // ""')
           if [ -z "$ZONE_ID" ]; then
@@ -144,7 +157,7 @@ jobs:
           echo "Zone ID: $ZONE_ID"
           PURGE_RESPONSE=$(curl -s -X POST \
             "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Authorization: Bearer ${{ env.CF_API_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"hosts": ["resume.mfaherty.net"]}')
           echo "Purge response: $PURGE_RESPONSE"
