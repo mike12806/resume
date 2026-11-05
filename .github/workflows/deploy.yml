@@ -7,7 +7,7 @@ on:
 
 env:
   PAGES_PROJECT: resume
-  WRANGLER_VERSION: "4.156.1"
+  WRANGLER_VERSION: "4.156.2"
 
 jobs:
   deploy:
