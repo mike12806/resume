@@ -1,5 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>mike12806/renovate-config", "github>mike12806/renovate-config:no-automerge"],
-  "ignoreTests": true
+  "extends": ["github>mike12806/renovate-config"]
 }
